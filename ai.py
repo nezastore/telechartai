@@ -16,8 +16,10 @@ async def handle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         # Ambil file foto dari pesan Telegram
         photo_file = await update.message.photo[-1].get_file()
-        photo_path = await photo_file.download()  # download ke file lokal, dapatkan path file
-
+        
+        # Download file ke lokal, dapatkan path file
+        photo_path = await photo_file.download()  # default simpan di direktori kerja dengan nama unik
+        
         # Gemini AI 2.5 Flash API integration
         gemini_api_key = 'AIzaSyAFddWRTXHkulEBpIjbcO2pUXx2lvGOXro'  # Gunakan literal langsung sesuai permintaan
         gemini_url = "https://api.gemini.ai/v2.5-flash/analyze"

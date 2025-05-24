@@ -21,7 +21,7 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyAFddWRTXHkulEBpIjbcO2pUXx2lv
 # Ambil kunci API OpenAI dari variabel lingkungan
 # PENTING: Kunci OpenAI harus dimulai dengan 'sk-', pastikan ini adalah kunci OpenAI yang valid.
 # Ganti 'YOUR_OPENAI_API_KEY' dengan nama variabel lingkungan yang Anda gunakan
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "AIzaSyAFddWRTXHkulEBpIjbcO2pUXx2lvGOXro")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "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")
 
 
 async def handle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):

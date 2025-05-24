@@ -51,7 +51,7 @@ async def handle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         {"text": (
                             "Analisis gambar chart trading ini. "
                             "Berikan prediksi sinyal trading (misalnya , Bullish, Bearish, atau Netral) "
-                            "dan berikan 3 alasan teknikal singkat serta profesional berdasarkan pola yang terlihat di chart.Dan berikan analisa menebak pola candle dan berikan saran setelah candle lebih baik buy atau sell atau memakai methode penebakan ai sesuai analisa"
+                            "dan berikan 3 alasan teknikal singkat serta profesional berdasarkan pola yang terlihat di chart. Dan berikan analisa menebak pola candle dan berikan saran setelah candle lebih baik buy atau sell atau memakai methode penebakan ai sesuai analisa trader profesional"
                             "Format jawaban Anda sebagai berikut:\n\n"
                             "📈 Prediksi: [Sinyal Anda]\n\n"
                             "Alasan:\n"

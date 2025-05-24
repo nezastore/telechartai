@@ -1,16 +1,22 @@
 import os
 import requests
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, filters
-from telegram.ext import ApplicationBuilder, MessageHandler, CallbackQueryHandler, ContextTypes
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import (
+    ApplicationBuilder,
+    MessageHandler,
+    CallbackQueryHandler,
+    ContextTypes,
+    filters,
+)
 
-def handle_image(update: Update, context: CallbackContext):
+async def handle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
-        # Get image from Telegram
-        photo_file = update.message.photo[-1].get_file()
-        photo_path = photo_file.download()
+        # Ambil file foto dari pesan Telegram
+        photo_file = await update.message.photo[-1].get_file()
+        photo_path = await photo_file.download()  # download ke file lokal, dapatkan path file
 
         # Gemini AI 2.5 Flash API integration
-        gemini_api_key = os.getenv('AIzaSyAFddWRTXHkulEBpIjbcO2pUXx2lvGOXro')
+        gemini_api_key = 'AIzaSyAFddWRTXHkulEBpIjbcO2pUXx2lvGOXro'  # Gunakan literal langsung sesuai permintaan
         gemini_url = "https://api.gemini.ai/v2.5-flash/analyze"
         
         with open(photo_path, "rb") as image_file:
@@ -21,17 +27,17 @@ def handle_image(update: Update, context: CallbackContext):
                 gemini_url,
                 files=files,
                 headers=headers,
-                timeout=10  # Faster timeout for 2.5 Flash
+                timeout=10  # Timeout lebih cepat untuk 2.5 Flash
             )
             
         gemini_data = gemini_response.json()
         
-        # Extract signal and patterns
+        # Ambil sinyal dan pola dari response Gemini
         signal = gemini_data.get('signal', 'N/A')
         patterns = ', '.join(gemini_data.get('patterns', ['Unknown']))
 
-        # GPT-4 API integration for explanations
-        gpt4_api_key = os.getenv('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')
+        # GPT-4 API integration untuk penjelasan
+        gpt4_api_key = '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'  # Gunakan literal langsung sesuai permintaan
         gpt4_url = "https://api.openai.com/v1/chat/completions"
         
         prompt = f"Berikan 3 alasan teknikal untuk sinyal {signal} berdasarkan pola berikut: {patterns}. Jelaskan secara singkat dan profesional."
@@ -52,20 +58,22 @@ def handle_image(update: Update, context: CallbackContext):
         gpt4_data = gpt4_response.json()
         reasons = gpt4_data['choices'][0]['message']['content']
 
-        # Send response to user
+        # Kirim balasan ke user
         reply = f"📈 Prediksi: {signal}\n\nAlasan:\n{reasons}"
-        update.message.reply_text(reply)
+        await update.message.reply_text(reply)
         
     except Exception as e:
-        update.message.reply_text(f"Error: {str(e)}")
-        
+        await update.message.reply_text(f"Error: {str(e)}")
+
 def main():
-    telegram_token = os.getenv('7899180208:AAH4hSC12ByLARkIhB4MXghv5vSYfPjj6EA')
-    updater = Updater(telegram_token)
-    dp = updater.dispatcher
-    dp.add_handler(MessageHandler(Filters.photo, handle_image))
-    updater.start_polling()
-    updater.idle()
+    telegram_token = os.getenv('TELEGRAM_BOT_TOKEN')  # Pastikan environment variable ini sudah di-set
+    app = ApplicationBuilder().token(telegram_token).build()
+
+    # Daftarkan handler untuk foto
+    app.add_handler(MessageHandler(filters.PHOTO, handle_image))
+
+    # Jalankan bot
+    app.run_polling()
 
 if __name__ == '__main__':
     main()

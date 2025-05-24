@@ -18,7 +18,7 @@ async def handle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
         photo_file = await update.message.photo[-1].get_file()
         
         # Download file ke lokal, dapatkan path file
-        photo_path = await photo_file.download()  # default simpan di direktori kerja dengan nama unik
+        photo_path = await photo_file.download_to_drive()  # Perbaikan di sini
         
         # Gemini AI 2.5 Flash API integration
         gemini_api_key = 'AIzaSyAFddWRTXHkulEBpIjbcO2pUXx2lvGOXro'  # Gunakan literal langsung sesuai permintaan

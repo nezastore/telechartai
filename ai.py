@@ -31,7 +31,7 @@ async def handle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
         photo_file = await update.message.photo[-1].get_file()
         # Mengunduh file ke drive lokal
         photo_path = await photo_file.download_to_drive()
-        await update.message.reply_text("Gambar diterima! Sedang menganalisis menggunakan Gemini...")
+        await update.message.reply_text("Gambar diterima! Sedang menganalisis menggunakan NEZATRADE...")
 
         # 2. Mengirim gambar ke Google Gemini Vision API
         # Membaca gambar dalam mode binary dan meng-encode ke Base64
@@ -49,9 +49,9 @@ async def handle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 {
                     "parts": [
                         {"text": (
-                            "Analisis gambar chart keuangan ini. "
+                            "Analisis gambar chart trading ini. "
                             "Berikan prediksi sinyal trading (misalnya, Bullish, Bearish, atau Netral) "
-                            "dan berikan 3 alasan teknikal singkat serta profesional berdasarkan pola yang terlihat di chart. "
+                            "dan berikan 3 alasan teknikal singkat serta profesional berdasarkan pola yang terlihat di chart.Dan berikan saran setelah candle lebih baik buy atau sell atau memakai methode penebakan ai sesuai analisa"
                             "Format jawaban Anda sebagai berikut:\n\n"
                             "📈 Prediksi: [Sinyal Anda]\n\n"
                             "Alasan:\n"

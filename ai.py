@@ -42,7 +42,7 @@ async def handle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
         patterns = ', '.join(gemini_data.get('patterns', ['Unknown']))
 
         # GPT-4 API integration untuk penjelasan
-        gpt4_api_key = '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'
+        gpt4_api_key = 'AIzaSyAFddWRTXHkulEBpIjbcO2pUXx2lvGOXro'
         gpt4_url = "https://api.openai.com/v1/chat/completions"
         
         prompt = f"Berikan 3 alasan teknikal untuk sinyal {signal} berdasarkan pola berikut: {patterns}. Jelaskan secara singkat dan profesional."

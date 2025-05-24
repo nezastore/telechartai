@@ -66,7 +66,7 @@ async def handle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"Error: {str(e)}")
 
 def main():
-    telegram_token = os.getenv('TELEGRAM_BOT_TOKEN')  # Pastikan environment variable ini sudah di-set
+    telegram_token = os.getenv('7899180208:AAH4hSC12ByLARkIhB4MXghv5vSYfPjj6EA')  # Pastikan environment variable ini sudah di-set
     app = ApplicationBuilder().token(telegram_token).build()
 
     # Daftarkan handler untuk foto

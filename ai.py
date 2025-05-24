@@ -9,6 +9,9 @@ from telegram.ext import (
     filters,
 )
 
+# Token bot Telegram Anda (langsung pasang di sini)
+TELEGRAM_BOT_TOKEN = "7899180208:AAH4hSC12ByLARkIhB4MXghv5vSYfPjj6EA"
+
 async def handle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         # Ambil file foto dari pesan Telegram
@@ -27,7 +30,7 @@ async def handle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 gemini_url,
                 files=files,
                 headers=headers,
-                timeout=10  # Timeout lebih cepat untuk 2.5 Flash
+                timeout=10
             )
             
         gemini_data = gemini_response.json()
@@ -37,7 +40,7 @@ async def handle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
         patterns = ', '.join(gemini_data.get('patterns', ['Unknown']))
 
         # GPT-4 API integration untuk penjelasan
-        gpt4_api_key = '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'  # Gunakan literal langsung sesuai permintaan
+        gpt4_api_key = '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'
         gpt4_url = "https://api.openai.com/v1/chat/completions"
         
         prompt = f"Berikan 3 alasan teknikal untuk sinyal {signal} berdasarkan pola berikut: {patterns}. Jelaskan secara singkat dan profesional."
@@ -66,8 +69,7 @@ async def handle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"Error: {str(e)}")
 
 def main():
-    telegram_token = os.getenv('7899180208:AAH4hSC12ByLARkIhB4MXghv5vSYfPjj6EA')  # Pastikan environment variable ini sudah di-set
-    app = ApplicationBuilder().token(telegram_token).build()
+    app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
     # Daftarkan handler untuk foto
     app.add_handler(MessageHandler(filters.PHOTO, handle_image))

@@ -1,7 +1,7 @@
 import os
 import requests
-from telegram import Update
-from telegram.ext import Updater, MessageHandler, Filters, CallbackContext
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, filters
+from telegram.ext import ApplicationBuilder, MessageHandler, CallbackQueryHandler, ContextTypes
 
 def handle_image(update: Update, context: CallbackContext):
     try:

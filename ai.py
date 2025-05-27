@@ -49,15 +49,20 @@ async def handle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 {
                     "parts": [
                         {"text": (
-                            "Analisis gambar chart trading ini. "
-                            "Berikan prediksi sinyal trading (misalnya , Sideways, Bullish, Bearish, atau Netral) "
-                            "dan berikan 3 alasan teknikal singkat serta profesional berdasarkan pola yang terlihat di chart. Dan berikan analisa menebak pola candle dan berikan saran setelah candle lebih baik buy atau sell atau memakai methode penebakan ai sesuai analisa trader profesional"
-                            "Format jawaban Anda sebagai berikut:\n\n"
-                            "📈 Prediksi: [Sinyal Anda]\n\n"
-                            "Alasan:\n"
-                            "1. [Alasan Teknis Pertama]\n"
-                            "2. [Alasan Teknis Kedua]\n"
-                            "3. [Alasan Teknis Ketiga]"
+         "Anda adalah seorang analis teknikal pasar keuangan. PERHATIAN: Analisis ini bersifat Profesional dan Tingkat kecerdasan Program.\n\n"
+    "Analisis screenshot chart trading berikut ini secara detail. Fokus pada elemen-elemen berikut jika terlihat dengan jelas di gambar:\n"
+    "1. Perkiraan Harga Saat Ini: (jika ada skala harga yang jelas dan mudah dibaca).\n"
+    "2. Tren Utama: (Contoh: Naik, Turun, Sideways/Konsolidasi).\n"
+    "3. Pola Candlestick/Chart Signifikan: (Contoh: Doji di Puncak/Lembah, Engulfing, Hammer, Shooting Star, Head and Shoulders, Double Top/Bottom, Triangle, Flag, Wedge, Channel).\n"
+    "4. Kondisi Indikator Teknikal Utama (jika terlihat jelas): (Contoh: RSI (Oversold <30, Overbought >70, Divergence), MACD (Golden/Death Cross, Divergence, Posisi Histogram), Moving Averages (Posisi harga terhadap MA, Golden/Death Cross MA), Bollinger Bands (Harga menyentuh upper/lower band, Squeeze)).\n"
+    "5. Level Support dan Resistance Kunci: (Identifikasi beberapa level S&R penting yang terlihat).\n\n"
+    "Berdasarkan semua observasi di atas, berikan:\n"
+    "A. **Saran Trading Keseluruhan:** (BUY, SELL, atau NETRAL/WAIT)\n"
+    "B. **Alasan Utama (poin-poin):** (Berikan minimal 2-3 alasan utama untuk saran trading Anda, merujuk pada observasi dari poin 1-5 di atas).\n"
+    "C. **Potensi Level Penting (jika teridentifikasi dari chart):**\n"
+    "   - Target Profit (TP) potensial: [jika ada]\n"
+    "   - Stop Loss (SL) potensial: [jika ada]\n\n"
+    "Struktur jawaban Anda sebaiknya jelas, terperinci, dan menggunakan poin-poin atau heading untuk setiap bagian. Ingat, ini adalah Trading forex maka usahakan semaksimal mungkin untuk analisa."
                         )},
                         {
                             "inlineData": {

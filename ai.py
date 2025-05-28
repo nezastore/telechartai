@@ -5,8 +5,8 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 # Token Telegram dan API Gemini (jangan lupa ganti dengan milik Anda)
-TELEGRAM_BOT_TOKEN = "YOUR_TELEGRAM_BOT_TOKEN_HERE"
-GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE"
+TELEGRAM_BOT_TOKEN = "7899180208:AAH4hSC12ByLARkIhB4MXghv5vSYfPjj6EA"
+GEMINI_API_KEY = "AIzaSyAFddWRTXHkulEBpIjbcO2pUXx2lvGOXro"
 
 async def handle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """

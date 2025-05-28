@@ -61,6 +61,7 @@ async def handle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
     "A. **Saran Trading Keseluruhan:** (BUY, SELL, atau NETRAL/WAIT)\n"
     "B. **Alasan Utama (poin-poin):** (Berikan minimal 2-3 alasan utama untuk saran trading Anda, merujuk pada observasi dari poin 1-6 di atas).\n"
     "C. **Potensi Level Penting (jika teridentifikasi dari chart):**\n"
+    "   - Open Posisi potensial: [jika ada]\n"
     "   - Target Profit (TP) potensial: [jika ada]\n"
     "   - Stop Loss (SL) potensial: [jika ada]\n\n"
     "Struktur jawaban Anda sebaiknya jelas, terperinci, dan menggunakan Tampilan yang keren atau point setiap bagian."

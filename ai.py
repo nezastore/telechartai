@@ -36,15 +36,12 @@ async def handle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # URL endpoint Gemini API dengan API key
         gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
 
-        # Payload dengan instruksi analisis dan gambar encoded, sesuai format terbaru
+        # Payload dengan format terbaru Gemini API
         gemini_payload = {
-            "temperature": 0.7,
-            "maxOutputTokens": 100,
             "messages": [
                 {
                     "author": "user",
                     "content": {
-                        "contentType": "text",
                         "text": (
                             "Anda adalah seorang analis teknikal pasar forex. Analisis ini bersifat Profesional dan Tingkat kecerdasan Program.\n\n"
                             "Analisis screenshot chart trading berikut ini secara detail. Fokus pada elemen-elemen candle terakhir berikut jika terlihat dengan jelas di gambar:\n"
@@ -68,14 +65,15 @@ async def handle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 {
                     "author": "user",
                     "content": {
-                        "contentType": "image",
                         "image": {
                             "mimeType": "image/jpeg",
                             "data": encoded_image
                         }
                     }
                 }
-            ]
+            ],
+            "temperature": 0.7,
+            "maxOutputTokens": 1000
         }
 
         # Kirim request ke Gemini API

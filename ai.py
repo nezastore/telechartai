@@ -19,7 +19,7 @@ async def handle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Ambil file gambar terakhir yang dikirim user
         photo_file = await update.message.photo[-1].get_file()
         photo_path = await photo_file.download_to_drive()
-        await update.message.reply_text("📷 Gambar diterima! Sedang menganalisis menggunakan NEZATRADE...")
+        await update.message.reply_text("📷 Gambar diterima! Sedang menganalisis menggunakan NEZATRADE⏳")
 
         # Baca dan encode gambar ke Base64
         with open(photo_path, "rb") as image_file:
@@ -34,8 +34,8 @@ async def handle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 {
                     "parts": [
                         {"text": (
-                            "Anda adalah seorang analis teknikal pasar keuangan. Analisis ini bersifat Profesional dan Tingkat kecerdasan Program.\n\n"
-                            "Analisis screenshot chart trading berikut ini secara detail. Fokus pada elemen-elemen berikut jika terlihat dengan jelas di gambar:\n"
+                            "Anda adalah seorang analis teknikal pasar forex. Analisis ini bersifat Profesional dan Tingkat kecerdasan Program.\n\n"
+                            "Analisis screenshot chart trading berikut ini secara detail. Fokus pada elemen-elemen candle terakhir berikut jika terlihat dengan jelas di gambar:\n"
                             "1. Perkiraan Harga Saat Ini: (jika ada skala harga yang jelas dan mudah dibaca).\n"
                             "2. Tren Utama: (Contoh: Naik, Turun, Sideways/Konsolidasi).\n"
                             "3. Pola Candlestick/Chart Signifikan: (Contoh: Doji di Puncak/Lembah, Engulfing, Hammer, Shooting Star, Head and Shoulders, Double Top/Bottom, Triangle, Flag, Wedge, Channel).\n"

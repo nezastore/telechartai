@@ -5,7 +5,7 @@ import logging
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 
-# Token Telegram dan API Gemini (ganti dengan token dan API key Anda)
+# Token Telegram dan API Gemini (jangan diubah)
 TELEGRAM_BOT_TOKEN = "7899180208:AAH4hSC12ByLARkIhB4MXghv5vSYfPjj6EA"
 GEMINI_API_KEY = "AIzaSyAFddWRTXHkulEBpIjbcO2pUXx2lvGOXro"
 
@@ -61,9 +61,7 @@ async def handle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     "mimeType": "image/jpeg",
                     "data": encoded_image
                 }
-            },
-            "temperature": 0.7,
-            "maxOutputTokens": 1024
+            }
         }
 
         # Kirim request ke Gemini API
@@ -100,9 +98,6 @@ async def handle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 processed_text = raw_text
                 for key, val in replacements.items():
                     processed_text = processed_text.replace(key, val)
-
-                # Tambahkan baris kosong antar paragraf untuk keterbacaan
-                processed_text = processed_text.replace("\n\n", "\n\n")
 
                 final_reply_text = processed_text
 

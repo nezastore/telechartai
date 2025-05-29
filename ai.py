@@ -5,10 +5,10 @@ import logging
 import os
 import asyncio
 import io
-# import nest_asyncio # OPSIONAL: Aktifkan jika Anda menjalankan di Jupyter/lingkungan interaktif
+import nest_asyncio # OPSIONAL: Aktifkan jika Anda menjalankan di Jupyter/lingkungan interaktif
 
 # OPSIONAL: Hilangkan tanda pagar di baris bawah jika Anda mendapat error "event loop is already running"
-# nest_asyncio.apply()
+nest_asyncio.apply()
 
 # --- Konfigurasi (TIDAK DIUBAH) ---
 TELEGRAM_BOT_TOKEN = '7899180208:AAH4hSC12ByLARkIhB4MXghv5vSYfPjj6EA'

@@ -1,10 +1,10 @@
 import telegram
 from telegram.ext import Application, MessageHandler, ContextTypes
-# Mengimpor filters secara eksplisit dari telegram.ext.filters
-from telegram.ext import filters
+from telegram.ext import filters # Correct import for filters
 import google.generativeai as genai
 import logging
 import os
+import asyncio # Import asyncio untuk pengelolaan event loop
 
 # Ganti dengan token bot Telegram Anda
 TELEGRAM_BOT_TOKEN = '7899180208:AAH4hSC12ByLARkIhB4MXghv5vSYfPjj6EA'
@@ -26,8 +26,8 @@ ANALYSIS_PROMPT = """Anda adalah seorang analis teknikal pasar forex. Analisis i
 
 async def analyze_image(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
     """
-    Menganalisis gambar yang dikirimkan pengguna menggunakan AI.
-    Respons dari AI kemudian diformat agar terlihat lebih menarik
+    Menganalisis gambar yang dikirimkan pengguna menggunakan Gemini AI.
+    Respons dari Gemini AI kemudian diformat agar terlihat lebih menarik
     dengan tambahan emotikon dan Markdown.
     """
     user = update.message.from_user
@@ -119,9 +119,19 @@ async def main():
     application.add_handler(photo_handler)
 
     # Menjalankan bot dalam mode polling, menunggu pesan masuk
+    # Ini akan memblokir hingga bot dihentikan (misalnya dengan Ctrl+C)
     await application.run_polling()
 
 if __name__ == '__main__':
-    import asyncio
-    # Menjalankan fungsi main secara asinkron
-    asyncio.run(main())
+    # Memastikan event loop dijalankan dengan benar.
+    # Jika Anda mendapatkan "RuntimeError: This event loop is already running",
+    # itu berarti ada event loop lain yang aktif.
+    # Solusinya adalah menutup terminal/IDE dan membukanya kembali,
+    # atau memastikan tidak ada proses Python lain yang berjalan di latar belakang.
+    try:
+        asyncio.run(main())
+    except RuntimeError as e:
+        logger.error(f"Terjadi kesalahan runtime: {e}")
+        logger.error("Ini sering terjadi jika event loop asyncio sudah berjalan. "
+                     "Coba tutup dan buka kembali terminal Anda atau restart kernel Python.")
+

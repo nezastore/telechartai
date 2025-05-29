@@ -5,24 +5,36 @@ import google.generativeai as genai
 import logging
 import os
 import asyncio
-import nest_asyncio
-from telegram.ext import Application
+import nest_asyncio # Mengimpor nest_asyncio sesuai permintaan Anda
 
-nest_asyncio.apply()
+nest_asyncio.apply() # Menerapkan patch nest_asyncio untuk mengatasi masalah event loop
 
+# Ganti dengan token bot Telegram Anda
 TELEGRAM_BOT_TOKEN = '7899180208:AAH4hSC12ByLARkIhB4MXghv5vSYfPjj6EA'
+# Ganti dengan API key Gemini Anda
 GEMINI_API_KEY = 'AIzaSyAgBNsxwQzFSVWQuEUKe7PkKykcX42BAx8'
 
+# Setup logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Inisialisasi Gemini AI
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-pro-vision')
+# PENTING: Mengganti model dari 'gemini-pro-vision' menjadi 'gemini-1.5-flash'
+# 'gemini-pro-vision' telah didepresiasi. 'gemini-1.5-flash' adalah model terbaru
+# yang direkomendasikan untuk kemampuan pemahaman gambar.
+model = genai.GenerativeModel('gemini-1.5-flash')
 
+# Prompt analisis yang akan dikirimkan ke Gemini AI bersama dengan gambar
 ANALYSIS_PROMPT = """Anda adalah seorang analis teknikal pasar forex. Analisis ini bersifat Profesional dan Tingkat kecerdasan Program.\n\nAnalisis screenshot chart trading berikut ini secara detail. Fokus pada elemen-elemen candle terakhir berikut jika terlihat dengan jelas di gambar:\n1. Perkiraan Harga Saat Ini: (jika ada skala harga yang jelas dan mudah dibaca).\n2. Tren Utama: (Contoh: Naik, Turun, Sideways/Konsolidasi).\n3. Pola Candlestick/Chart Signifikan: (Contoh: Doji di Puncak/Lembah, Engulfing, Hammer, Shooting Star, Head and Shoulders, Double Top/Bottom, Triangle, Flag, Wedge, Channel).\n4. Kondisi Indikator Teknikal Utama (jika terlihat jelas): (Contoh: RSI (Oversold <30, Overbought >70, Divergence), MACD (Golden/Death Cross, Divergence, Posisi Histogram), Moving Averages (Posisi harga terhadap MA, Golden/Death Cross MA), Bollinger Bands (Harga menyentuh upper/lower band, Squeeze)).\n5. Level Support dan Resistance Kunci: (Identifikasi beberapa level S&R penting yang terlihat).\n\n6. Gunakan strategi Pola 7 Candle & Teknik 7 Naga.\nBerdasarkan semua observasi di atas, berikan:\n🔹 **Saran Trading Keseluruhan:** (BUY, SELL, atau NETRAL/WAIT)\n🔹 **Alasan Utama (poin-poin):** (Berikan minimal 2-3 alasan utama untuk saran trading Anda, merujuk pada observasi dari poin 1-6 di atas).\n🔹 **Potensi Level Penting (jika teridentifikasi dari chart):**\n  - 🟢 Open Posisi potensial: [jika ada]\n  - 🎯 Target Profit (TP) potensial: [jika ada]\n  - 🛑 Stop Loss (SL) potensial: [jika ada]\n\nStruktur jawaban Anda sebaiknya jelas, terperinci, dan menggunakan tampilan yang keren atau point setiap bagian."""
 
 async def analyze_image(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Menganalisis gambar yang dikirimkan pengguna menggunakan Gemini AI.
+    Respons dari Gemini AI kemudian diformat agar terlihat lebih menarik
+    dengan tambahan emotikon dan Markdown.
+    """
     user = update.message.from_user
     photo = update.message.photo[-1]
     file = await context.bot.get_file(photo.file_id)
@@ -54,8 +66,22 @@ async def analyze_image(update: telegram.Update, context: ContextTypes.DEFAULT_T
                 formatted_response += f"🕯️ {line}\n"
             elif line.startswith("4. Kondisi Indikator Teknikal Utama"):
                 formatted_response += f"⚙️ {line}\n"
-            elif line.startswith("5. Level Support dan Resistance Kunci"):
-                formatted_response += f"🛡️ {line}\n"
+            elif line.startswith("5. Level Support dan Resistance Kunci:"):
+                formatted_response += f"🧱 {line}\n" # Menggunakan emotikon yang konsisten
+            elif line.startswith("6. Gunakan strategi"):
+                formatted_response += f"🐉 {line}\n"
+            elif line.startswith("🔹 **Saran Trading Keseluruhan:**"):
+                formatted_response += f"\n✅ **{line.replace('🔹 **', '').replace(':**', '')}**\n"
+            elif line.startswith("🔹 **Alasan Utama (poin-poin):**"):
+                formatted_response += f"📌 **{line.replace('🔹 **', '').replace(':**', '')}**\n"
+            elif line.startswith("🔹 **Potensi Level Penting (jika teridentifikasi dari chart):**"):
+                formatted_response += f"\n🔑 **{line.replace('🔹 **', '').replace(':**', '')}**\n"
+            elif line.startswith("  - 🟢 Open Posisi potensial:"):
+                formatted_response += f"   🟢 {line.replace('  - 🟢 ', '')}\n"
+            elif line.startswith("  - 🎯 Target Profit (TP) potensial:"):
+                formatted_response += f"   🎯 {line.replace('  - 🎯 ', '')}\n"
+            elif line.startswith("  - 🛑 Stop Loss (SL) potensial:"):
+                formatted_response += f"   🛑 {line.replace('  - 🛑 ', '')}\n"
             else:
                 formatted_response += f"{line}\n"
 
@@ -64,12 +90,14 @@ async def analyze_image(update: telegram.Update, context: ContextTypes.DEFAULT_T
 
     except Exception as e:
         logger.error("Error saat analisis gambar: %s", e)
+        await processing_message.delete() # Pastikan pesan dihapus bahkan saat error
         await update.message.reply_text("⚠️ Maaf, terjadi kesalahan saat menganalisis gambar Anda. Silakan coba lagi nanti.")
     finally:
         if os.path.exists('user_image.jpg'):
             os.remove('user_image.jpg')
 
 async def main():
+    """Fungsi utama untuk menjalankan bot."""
     application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
     photo_handler = MessageHandler(filters.PHOTO, analyze_image)
@@ -79,13 +107,7 @@ async def main():
     await application.run_polling()
 
 if __name__ == '__main__':
-    import asyncio
+    # Dengan nest_asyncio.apply() di awal skrip, asyncio.run() seharusnya bisa dipanggil
+    # tanpa masalah "event loop already running".
+    asyncio.run(main())
 
-    try:
-        asyncio.run(main())
-    except RuntimeError as e:
-        if "asyncio.run() cannot be called from a running event loop" in str(e):
-            loop = asyncio.get_event_loop()
-            loop.run_until_complete(main())
-        else:
-            raise

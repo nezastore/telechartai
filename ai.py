@@ -21,18 +21,17 @@ logger = logging.getLogger(__name__)
 
 # Inisialisasi Gemini AI
 genai.configure(api_key=GEMINI_API_KEY)
-# PENTING: Mengganti model ke 'gemini-1.0-pro-vision-latest'
-# Ini adalah model vision yang tersedia di lokasi Anda berdasarkan pesan error.
+# Menggunakan model yang didukung untuk visi
 model = genai.GenerativeModel('gemini-1.0-pro-vision-latest')
 
 # Prompt analisis yang akan dikirimkan ke Gemini AI bersama dengan gambar
-ANALYSIS_PROMPT = """Anda adalah seorang analis teknikal pasar forex. Analisis ini bersifat Profesional dan Tingkat kecerdasan Program.\n\nAnalisis screenshot chart trading berikut ini secara detail. Fokus pada elemen-elemen candle terakhir berikut jika terlihat dengan jelas di gambar:\n1. Perkiraan Harga Saat Ini: (jika ada skala harga yang jelas dan mudah dibaca).\n2. Tren Utama: (Contoh: Naik, Turun, Sideways/Konsolidasi).\n3. Pola Candlestick/Chart Signifikan: (Contoh: Doji di Puncak/Lembah, Engulfing, Hammer, Shooting Star, Head and Shoulders, Double Top/Bottom, Triangle, Flag, Wedge, Channel).\n4. Kondisi Indikator Teknikal Utama (jika terlihat jelas): (Contoh: RSI (Oversold <30, Overbought >70, Divergence), MACD (Golden/Death Cross, Divergence, Posisi Histogram), Moving Averages (Posisi harga terhadap MA, Golden/Death Cross MA), Bollinger Bands (Harga menyentuh upper/lower band, Squeeze)).\n5. Level Support dan Resistance Kunci: (Identifikasi beberapa level S&R penting yang terlihat).\n\n6. Gunakan strategi Pola 7 Candle & Teknik 7 Naga.\nBerdasarkan semua observasi di atas, berikan:\n🔹 **Saran Trading Keseluruhan:** (BUY, SELL, atau NETRAL/WAIT)\n🔹 **Alasan Utama (poin-poin):** (Berikan minimal 2-3 alasan utama untuk saran trading Anda, merujuk pada observasi dari poin 1-6 di atas).\n🔹 **Potensi Level Penting (jika teridentifikasi dari chart):**\n  - 🟢 Open Posisi potensial: [jika ada]\n  - 🎯 Target Profit (TP) potensial: [jika ada]\n  - 🛑 Stop Loss (SL) potensial: [jika ada]\n\nStruktur jawaban Anda sebaiknya jelas, terperinci, dan menggunakan tampilan yang keren atau point setiap bagian."""
+ANALYSIS_PROMPT = """Anda adalah seorang analis teknikal pasar forex. Analisis screenshot chart trading berikut ini secara detail. Fokus pada elemen-elemen candle terakhir berikut jika terlihat dengan jelas di gambar:\n1. Perkiraan Harga Saat Ini: (jika ada skala harga yang jelas dan mudah dibaca).\n2. Tren Utama: (Contoh: Naik, Turun, Sideways/Konsolidasi).\n3. Pola Candlestick/Chart Signifikan: (Contoh: Doji di Puncak/Lembah, Engulfing, Hammer, Shooting Star, Head and Shoulders, Double Top/Bottom, Triangle, Flag, Wedge, Channel).\n4. Kondisi Indikator Teknikal Utama (jika terlihat jelas): (Contoh: RSI (Oversold <30, Overbought >70, Divergence), MACD (Golden/Death Cross, Divergence, Posisi Histogram), Moving Averages (Posisi harga terhadap MA, Golden/Death Cross MA), Bollinger Bands (Harga menyentuh upper/lower band, Squeeze)).\n5. Level Support dan Resistance Kunci: (Identifikasi beberapa level S&R penting yang terlihat).\n\n6. Gunakan strategi Pola 7 Candle & Teknik 7 Naga.\nBerdasarkan semua observasi di atas, berikan:\n🔹 **Saran Trading Keseluruhan:** (BUY, SELL, atau NETRAL/WAIT)\n🔹 **Alasan Utama (poin-poin):** (Berikan minimal 2-3 alasan utama untuk saran trading Anda, merujuk pada observasi dari poin 1-6 di atas).\n🔹 **Potensi Level Penting (jika teridentifikasi dari chart):**\n  - 🟢 Open Posisi potensial: [jika ada]\n  - 🎯 Target Profit (TP) potensial: [jika ada]\n  - 🛑 Stop Loss (SL) potensial: [jika ada]\n\nStruktur jawaban Anda sebaiknya jelas, terperinci, dan menggunakan tampilan yang keren atau point setiap bagian."""
 
 async def analyze_image(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
     """
     Menganalisis gambar yang dikirimkan pengguna menggunakan Gemini AI.
-    Respons dari Gemini AI kemudian diformat agar terlihat lebih menarik
-    dengan tambahan emotikon dan Markdown.
+    Gambar dan prompt dipisahkan secara eksplisit.
+    Error selama pemanggilan Gemini AI akan dicatat dalam log.
     """
     user = update.message.from_user
     photo = update.message.photo[-1]
@@ -46,6 +45,7 @@ async def analyze_image(update: telegram.Update, context: ContextTypes.DEFAULT_T
         with open('user_image.jpg', 'rb') as image_file:
             image_data = image_file.read()
 
+        # Memisahkan gambar dan prompt secara eksplisit
         contents = [
             {"mime_type": "image/jpeg", "data": image_data},
             {"text": ANALYSIS_PROMPT}
@@ -88,7 +88,7 @@ async def analyze_image(update: telegram.Update, context: ContextTypes.DEFAULT_T
         await update.message.reply_text(formatted_response, parse_mode=telegram.constants.ParseMode.MARKDOWN)
 
     except Exception as e:
-        logger.error("Error saat analisis gambar: %s", e)
+        logger.error(f"Terjadi kesalahan saat memanggil Gemini AI: {e}") # Log error yang lebih spesifik
         await processing_message.delete() # Pastikan pesan dihapus bahkan saat error
         await update.message.reply_text("⚠️ Maaf, terjadi kesalahan saat menganalisis gambar Anda. Silakan coba lagi nanti.")
     finally:
@@ -100,12 +100,4 @@ async def main():
     application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
     photo_handler = MessageHandler(filters.PHOTO, analyze_image)
-    application.add_handler(photo_handler)
-
-    logger.info("Bot Telegram sudah berjalan...")
-    await application.run_polling()
-
-if __name__ == '__main__':
-    # Dengan nest_asyncio.apply() di awal skrip, asyncio.run() seharusnya bisa dipanggil
-    # tanpa masalah "event loop already running".
-    asyncio.run(main())
+    application.add_handler

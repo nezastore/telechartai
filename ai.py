@@ -1,5 +1,4 @@
 import os
-import base64
 import requests
 import logging
 from telegram import Update
@@ -29,26 +28,16 @@ async def handle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
         photo_path = await photo_file.download_to_drive()
         await update.message.reply_text("📷 Gambar diterima! Sedang menganalisis menggunakan NEZATRADE⏳")
 
-        # Baca dan encode gambar ke Base64
-        with open(photo_path, "rb") as image_file:
-            encoded_image = base64.b64encode(image_file.read()).decode("utf-8")
+        # **Jangan encode gambar ke base64 dan jangan masukkan ke prompt**
 
-        # Buat prompt dengan menyisipkan base64 image sebagai bagian dari teks
+        # Buat prompt teks tanpa gambar
         prompt_text = (
-            "Anda adalah seorang analis teknikal pasar forex. Berikut adalah gambar chart trading dalam format base64:\n\n"
-            f"data:image/jpeg;base64,{encoded_image}\n\n"
-            "Analisis screenshot chart trading ini secara detail. Fokus pada elemen-elemen candle terakhir berikut jika terlihat dengan jelas di gambar:\n"
-            "1. Perkiraan Harga Saat Ini\n"
-            "2. Tren Utama\n"
-            "3. Pola Candlestick/Chart Signifikan\n"
-            "4. Kondisi Indikator Teknikal Utama\n"
-            "5. Level Support dan Resistance Kunci\n"
-            "6. Gunakan strategi Pola 7 Candle & Teknik Candle 7 Naga.\n"
-            "Berdasarkan semua observasi di atas, berikan:\n"
-            "🔹 Saran Setelah candle Terakhir (BUY, SELL, atau NETRAL/WAIT)\n"
-            "🔹 Alasan Utama (2-3 poin)\n"
-            "🔹 Potensi Level Penting (Open Posisi, Target Profit, Stop Loss)\n"
-            "Jawaban harus jelas, terperinci, dan menggunakan format yang mudah dibaca."
+            "Anda adalah seorang analis teknikal pasar forex. "
+            "Saya akan mengirimkan gambar chart trading secara terpisah. "
+            "Tolong berikan analisis umum berdasarkan pengalaman Anda tentang chart trading candlestick, "
+            "fokus pada elemen-elemen candle terakhir, tren utama, pola candlestick, indikator teknikal, "
+            "dan level support/resistance. "
+            "Berikan saran trading (BUY, SELL, NETRAL), alasan utama, dan potensi level penting."
         )
 
         # URL endpoint Gemini API dengan API key

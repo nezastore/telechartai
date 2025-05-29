@@ -1,125 +1,124 @@
-import os
+import telegram
+from telegram.ext import Application, MessageHandler, Filters, ContextTypes
+import google.generativeai as genai
 import logging
-from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
-import requests
+import os
 
-# Token Telegram dan API Gemini (jangan diubah)
-TELEGRAM_BOT_TOKEN = "7899180208:AAH4hSC12ByLARkIhB4MXghv5vSYfPjj6EA"
-GEMINI_API_KEY = "AIzaSyAgBNsxwQzFSVWQuEUKe7PkKykcX42BAx8"
+# Ganti dengan token bot Telegram Anda
+TELEGRAM_BOT_TOKEN = '7899180208:AAH4hSC12ByLARkIhB4MXghv5vSYfPjj6EA'
+# Ganti dengan API key Gemini Anda
+GEMINI_API_KEY = 'AIzaSyAgBNsxwQzFSVWQuEUKe7PkKykcX42BAx8'
 
-# Setup logging untuk debugging
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
-)
+# Setup logging
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Prompt analisis yang dipisah dari gambar
-ANALYSIS_PROMPT = (
-    "Anda adalah seorang analis teknikal pasar forex. Analisis ini bersifat Profesional dan Tingkat kecerdasan Program.\n\n"
-    "Analisis screenshot chart trading berikut ini secara detail. Fokus pada elemen-elemen candle terakhir berikut jika terlihat dengan jelas di gambar:\n"
-    "1. Perkiraan Harga Saat Ini: (jika ada skala harga yang jelas dan mudah dibaca).\n"
-    "2. Tren Utama: (Contoh: Naik, Turun, Sideways/Konsolidasi).\n"
-    "3. Pola Candlestick/Chart Signifikan: (Contoh: Doji di Puncak/Lembah, Engulfing, Hammer, Shooting Star, Head and Shoulders, Double Top/Bottom, Triangle, Flag, Wedge, Channel).\n"
-    "4. Kondisi Indikator Teknikal Utama (jika terlihat jelas): (Contoh: RSI (Oversold <30, Overbought >70, Divergence), MACD (Golden/Death Cross, Divergence, Posisi Histogram), Moving Averages (Posisi harga terhadap MA, Golden/Death Cross MA), Bollinger Bands (Harga menyentuh upper/lower band, Squeeze)).\n"
-    "5. Level Support dan Resistance Kunci: (Identifikasi beberapa level S&R penting yang terlihat).\n\n"
-    "6. Gunakan strategi Pola 7 Candle & Teknik 7 Naga.\n"
-    "Berdasarkan semua observasi di atas, berikan:\n"
-    "🔹 **Saran Trading Keseluruhan:** (BUY, SELL, atau NETRAL/WAIT)\n"
-    "🔹 **Alasan Utama (poin-poin):** (Berikan minimal 2-3 alasan utama untuk saran trading Anda, merujuk pada observasi dari poin 1-6 di atas).\n"
-    "🔹 **Potensi Level Penting (jika teridentifikasi dari chart):**\n"
-    "   - 🟢 Open Posisi potensial: [jika ada]\n"
-    "   - 🎯 Target Profit (TP) potensial: [jika ada]\n"
-    "   - 🛑 Stop Loss (SL) potensial: [jika ada]\n\n"
-    "Struktur jawaban Anda sebaiknya jelas, terperinci, dan menggunakan tampilan yang keren atau point setiap bagian."
-)
+# Inisialisasi Gemini AI
+genai.configure(api_key=GEMINI_API_KEY)
+# Menggunakan model 'gemini-pro-vision' untuk kemampuan pemahaman gambar
+model = genai.GenerativeModel('gemini-pro-vision')
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "Halo! Kirimkan saya gambar chart trading, dan saya akan menganalisisnya menggunakan AI."
-    )
+# Prompt analisis yang akan dikirimkan ke Gemini AI bersama dengan gambar
+ANALYSIS_PROMPT = """Anda adalah seorang analis teknikal pasar forex. Analisis ini bersifat Profesional dan Tingkat kecerdasan paling tinggi.\n\nAnalisis screenshot chart trading berikut ini secara detail. Fokus pada elemen-elemen candle terakhir berikut jika terlihat dengan jelas di gambar:\n1. Perkiraan Harga Saat Ini: (jika ada skala harga yang jelas dan mudah dibaca).\n2. Tren Utama: (Contoh: Naik, Turun, Sideways/Konsolidasi).\n3. Pola Candlestick/Chart Signifikan: (Contoh: Doji di Puncak/Lembah, Engulfing, Hammer, Shooting Star, Head and Shoulders, Double Top/Bottom, Triangle, Flag, Wedge, Channel).\n4. Kondisi Indikator Teknikal Utama (jika terlihat jelas): (Contoh: RSI (Oversold <30, Overbought >70, Divergence), MACD (Golden/Death Cross, Divergence, Posisi Histogram), Moving Averages (Posisi harga terhadap MA, Golden/Death Cross MA), Bollinger Bands (Harga menyentuh upper/lower band, Squeeze)).\n5. Level Support dan Resistance Kunci: (Identifikasi beberapa level S&R penting yang terlihat).\n\n6. Gunakan strategi Pola 7 Candle & Teknik 7 Naga.\nBerdasarkan semua observasi di atas, berikan:\n🔹 **Saran Trading Keseluruhan:** (BUY, SELL, atau NETRAL/WAIT)\n🔹 **Alasan Utama (poin-poin):** (Berikan minimal 2-3 alasan utama untuk saran trading Anda, merujuk pada observasi dari poin 1-6 di atas).\n🔹 **Potensi Level Penting (jika teridentifikasi dari chart):**\n  - 🟢 Open Posisi potensial: [jika ada]\n  - 🎯 Target Profit (TP) potensial: [jika ada]\n  - 🛑 Stop Loss (SL) potensial: [jika ada]\n\nStruktur jawaban Anda sebaiknya jelas, terperinci, dan menggunakan tampilan yang keren atau point setiap bagian."""
 
-async def handle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    photo_path = None
+async def analyze_image(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Menganalisis gambar yang dikirimkan pengguna menggunakan AI.
+    Respons dari AI kemudian diformat agar terlihat lebih menarik
+    dengan tambahan emotikon dan Markdown.
+    """
+    user = update.message.from_user
+    # Mengambil objek foto dengan resolusi tertinggi
+    photo = update.message.photo[-1]
+    # Mendapatkan objek file dari Telegram API
+    file = await context.bot.get_file(photo.file_id)
+    # Mengunduh gambar ke penyimpanan lokal
+    await file.download_to_drive('user_image.jpg')
+    logger.info("Gambar diterima dari %s", user.first_name)
+
+    # Mengirim pesan "Sedang menganalisis..." agar pengguna tahu bot sedang bekerja
+    processing_message = await update.message.reply_text("⏳ Sedang menganalisis gambar Anda... Mohon tunggu sebentar.")
+
     try:
-        # Ambil file gambar terakhir yang dikirim user
-        photo_file = await update.message.photo[-1].get_file()
-        photo_path = await photo_file.download_to_drive()
-        await update.message.reply_text("📷 Gambar diterima! Sedang menganalisis menggunakan NEZATRADE⏳")
+        # Membaca data gambar dalam mode biner
+        with open('user_image.jpg', 'rb') as image_file:
+            image_data = image_file.read()
 
-        # Karena Gemini API tidak menerima file gambar secara langsung,
-        # kita hanya mengirim prompt analisis tanpa menyisipkan base64 gambar.
-        # Anda bisa menambahkan logika lain jika ingin mengirim gambar ke API lain.
+        # Menyiapkan konten untuk dikirim ke Gemini AI (gambar dan teks prompt)
+        contents = [
+            {"mime_type": "image/jpeg", "data": image_data},
+            {"text": ANALYSIS_PROMPT}
+        ]
 
-        gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
+        # Memanggil Gemini AI untuk menghasilkan konten berdasarkan gambar dan prompt
+        response = await model.generate_content(contents)
+        # Mengambil teks analisis dari respons Gemini
+        analysis_text = response.text.strip()
+        # Memisahkan teks analisis menjadi baris-baris
+        analysis_lines = analysis_text.split('\n')
 
-        gemini_payload = {
-            "contents": [
-                {
-                    "parts": [
-                        {
-                            "text": ANALYSIS_PROMPT
-                        }
-                    ]
-                }
-            ]
-        }
+        # Membangun respons yang diformat dengan emotikon dan Markdown
+        formatted_response = "📈 **Analisis Trading Profesional** 📉\n\n"
+        for line in analysis_lines:
+            # Menambahkan emotikon berdasarkan isi baris
+            if line.startswith("1. Perkiraan Harga Saat Ini:"):
+                formatted_response += f"💰 {line}\n"
+            elif line.startswith("2. Tren Utama:"):
+                formatted_response += f"📊 {line}\n"
+            elif line.startswith("3. Pola Candlestick/Chart Signifikan:"):
+                formatted_response += f"🕯️ {line}\n"
+            elif line.startswith("4. Kondisi Indikator Teknikal Utama"):
+                formatted_response += f"⚙️ {line}\n"
+            elif line.startswith("5. Level Support dan Resistance Kunci:"):
+                formatted_response += f"🧱 {line}\n"
+            elif line.startswith("6. Gunakan strategi"):
+                formatted_response += f"🐉 {line}\n"
+            elif line.startswith("🔹 **Saran Trading Keseluruhan:**"):
+                # Menghilangkan "🔹 **" dan ":**" untuk pemformatan yang lebih bersih
+                formatted_response += f"\n✅ **{line.replace('🔹 **', '').replace(':**', '')}**\n"
+            elif line.startswith("🔹 **Alasan Utama (poin-poin):**"):
+                formatted_response += f"📌 **{line.replace('🔹 **', '').replace(':**', '')}**\n"
+            elif line.startswith("🔹 **Potensi Level Penting (jika teridentifikasi dari chart):**"):
+                formatted_response += f"\n🔑 **{line.replace('🔹 **', '').replace(':**', '')}**\n"
+            elif line.startswith("  - 🟢 Open Posisi potensial:"):
+                formatted_response += f"   🟢 {line.replace('  - 🟢 ', '')}\n"
+            elif line.startswith("  - 🎯 Target Profit (TP) potensial:"):
+                formatted_response += f"   🎯 {line.replace('  - 🎯 ', '')}\n"
+            elif line.startswith("  - 🛑 Stop Loss (SL) potensial:"):
+                formatted_response += f"   🛑 {line.replace('  - 🛑 ', '')}\n"
+            else:
+                # Untuk baris lain yang tidak cocok dengan pola di atas
+                formatted_response += f"{line}\n"
 
-        gemini_response = requests.post(
-            gemini_url,
-            json=gemini_payload,
-            timeout=30
-        )
-        gemini_response.raise_for_status()
-        gemini_data = gemini_response.json()
+        # Menghapus pesan "Sedang menganalisis..."
+        await context.bot.delete_message(chat_id=update.message.chat_id, message_id=processing_message.message_id)
+        # Mengirim respons analisis yang sudah diformat ke pengguna
+        await update.message.reply_text(formatted_response, parse_mode=telegram.constants.ParseMode.MARKDOWN)
 
-        final_reply_text = "⚠️ Tidak dapat menganalisis gambar atau menghasilkan prediksi."
-
-        if gemini_data and gemini_data.get('candidates'):
-            first_candidate = gemini_data['candidates'][0]
-            if first_candidate.get('content') and first_candidate['content'].get('text'):
-                raw_text = first_candidate['content']['text']
-
-                # Pemrosesan teks untuk menambahkan emoji dan format Markdown
-                replacements = {
-                    "BUY": "🟢 **BUY**",
-                    "SELL": "🔴 **SELL**",
-                    "TP": "🎯 **TP**",
-                    "SL": "🛑 **SL**",
-                    "Open Posisi": "🟢 **Open Posisi**",
-                    "Target Profit": "🎯 **Target Profit**",
-                    "Stop Loss": "🛑 **Stop Loss**",
-                    "Saran Trading": "💡 **Saran Trading**",
-                    "Alasan": "📌 **Alasan**",
-                    "Potensi Level Penting": "📊 **Potensi Level Penting**",
-                }
-                processed_text = raw_text
-                for key, val in replacements.items():
-                    processed_text = processed_text.replace(key, val)
-
-                final_reply_text = processed_text
-
-        await update.message.reply_text(final_reply_text, parse_mode='Markdown')
-
-    except requests.exceptions.RequestException as req_err:
-        logger.error(f"RequestException: {req_err}")
-        await update.message.reply_text(f"❌ Terjadi masalah koneksi atau API: {req_err}. Pastikan kunci API dan URL benar.")
     except Exception as e:
-        logger.error(f"Exception: {e}")
-        await update.message.reply_text(f"⚠️ Terjadi kesalahan: {str(e)}. Mohon coba lagi.")
+        logger.error(f"Terjadi kesalahan saat memproses gambar: {e}")
+        # Menghapus pesan "Sedang menganalisis..." jika terjadi error
+        await context.bot.delete_message(chat_id=update.message.chat_id, message_id=processing_message.message_id)
+        await update.message.reply_text("Maaf, terjadi kesalahan saat menganalisis gambar. Pastikan gambar chart jelas.")
     finally:
-        # Hapus file gambar yang sudah diunduh
-        if photo_path and os.path.exists(photo_path):
-            os.remove(photo_path)
-            logger.info(f"File {photo_path} telah dihapus.")
+        # Selalu menghapus file gambar setelah diproses, baik berhasil atau gagal
+        if os.path.exists('user_image.jpg'):
+            os.remove('user_image.jpg')
 
-def main():
-    app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.PHOTO, handle_image))
-    print("Bot Telegram berjalan... Tekan Ctrl+C untuk berhenti.")
-    app.run_polling()
+async def main():
+    """Fungsi utama untuk menjalankan bot."""
+    # Membangun aplikasi bot Telegram
+    application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
-if __name__ == "__main__":
-    main()
+    # Menambahkan handler untuk pesan yang berisi foto
+    photo_handler = MessageHandler(Filters.photo, analyze_image)
+    application.add_handler(photo_handler)
+
+    # Menjalankan bot dalam mode polling, menunggu pesan masuk
+    await application.run_polling()
+
+if __name__ == '__main__':
+    import asyncio
+    # Menjalankan fungsi main secara asinkron
+    asyncio.run(main())

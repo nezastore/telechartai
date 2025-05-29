@@ -5,6 +5,10 @@ import google.generativeai as genai
 import logging
 import os
 import asyncio
+import nest_asyncio
+from telegram.ext import Application
+
+nest_asyncio.apply()
 
 TELEGRAM_BOT_TOKEN = '7899180208:AAH4hSC12ByLARkIhB4MXghv5vSYfPjj6EA'
 GEMINI_API_KEY = 'AIzaSyAgBNsxwQzFSVWQuEUKe7PkKykcX42BAx8'

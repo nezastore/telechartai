@@ -7,7 +7,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, fil
 
 # Token Telegram dan API Gemini (jangan diubah)
 TELEGRAM_BOT_TOKEN = "7899180208:AAH4hSC12ByLARkIhB4MXghv5vSYfPjj6EA"
-GEMINI_API_KEY = "AIzaSyAFddWRTXHkulEBpIjbcO2pUXx2lvGOXro"
+GEMINI_API_KEY = "AIzaSyAgBNsxwQzFSVWQuEUKe7PkKykcX42BAx8"
 
 # Setup logging untuk debugging
 logging.basicConfig(
@@ -33,47 +33,38 @@ async def handle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
         with open(photo_path, "rb") as image_file:
             encoded_image = base64.b64encode(image_file.read()).decode("utf-8")
 
+        # Buat prompt dengan menyisipkan base64 image sebagai bagian dari teks
+        prompt_text = (
+            "Anda adalah seorang analis teknikal pasar forex. Berikut adalah gambar chart trading dalam format base64:\n\n"
+            f"{encoded_image}\n\n"
+            "Analisis screenshot chart trading ini secara detail. Fokus pada elemen-elemen candle terakhir berikut jika terlihat dengan jelas di gambar:\n"
+            "1. Perkiraan Harga Saat Ini\n"
+            "2. Tren Utama\n"
+            "3. Pola Candlestick/Chart Signifikan\n"
+            "4. Kondisi Indikator Teknikal Utama\n"
+            "5. Level Support dan Resistance Kunci\n"
+            "6. Gunakan strategi Pola 7 Candle & Teknik 7 Naga.\n"
+            "Berdasarkan semua observasi di atas, berikan:\n"
+            "🔹 Saran Trading Keseluruhan (BUY, SELL, atau NETRAL/WAIT)\n"
+            "🔹 Alasan Utama (2-3 poin)\n"
+            "🔹 Potensi Level Penting (Open Posisi, Target Profit, Stop Loss)\n"
+            "Jawaban harus jelas, terperinci, dan menggunakan format yang mudah dibaca."
+        )
+
         # URL endpoint Gemini API dengan API key
         gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
 
-        # Payload dengan format terbaru Gemini API
+        # Payload dengan format yang benar sesuai dokumentasi terbaru
         gemini_payload = {
-            "messages": [
+            "contents": [
                 {
-                    "author": "user",
-                    "content": {
-                        "text": (
-                            "Anda adalah seorang analis teknikal pasar forex. Analisis ini bersifat Profesional dan Tingkat kecerdasan Program.\n\n"
-                            "Analisis screenshot chart trading berikut ini secara detail. Fokus pada elemen-elemen candle terakhir berikut jika terlihat dengan jelas di gambar:\n"
-                            "1. Perkiraan Harga Saat Ini: (jika ada skala harga yang jelas dan mudah dibaca).\n"
-                            "2. Tren Utama: (Contoh: Naik, Turun, Sideways/Konsolidasi).\n"
-                            "3. Pola Candlestick/Chart Signifikan: (Contoh: Doji di Puncak/Lembah, Engulfing, Hammer, Shooting Star, Head and Shoulders, Double Top/Bottom, Triangle, Flag, Wedge, Channel).\n"
-                            "4. Kondisi Indikator Teknikal Utama (jika terlihat jelas): (Contoh: RSI (Oversold <30, Overbought >70, Divergence), MACD (Golden/Death Cross, Divergence, Posisi Histogram), Moving Averages (Posisi harga terhadap MA, Golden/Death Cross MA), Bollinger Bands (Harga menyentuh upper/lower band, Squeeze)).\n"
-                            "5. Level Support dan Resistance Kunci: (Identifikasi beberapa level S&R penting yang terlihat).\n\n"
-                            "6. Gunakan strategi Pola 7 Candle & Teknik 7 Naga.\n"
-                            "Berdasarkan semua observasi di atas, berikan:\n"
-                            "🔹 **Saran Trading Keseluruhan:** (BUY, SELL, atau NETRAL/WAIT)\n"
-                            "🔹 **Alasan Utama (poin-poin):** (Berikan minimal 2-3 alasan utama untuk saran trading Anda, merujuk pada observasi dari poin 1-6 di atas).\n"
-                            "🔹 **Potensi Level Penting (jika teridentifikasi dari chart):**\n"
-                            "   - 🟢 Open Posisi potensial: [jika ada]\n"
-                            "   - 🎯 Target Profit (TP) potensial: [jika ada]\n"
-                            "   - 🛑 Stop Loss (SL) potensial: [jika ada]\n\n"
-                            "Struktur jawaban Anda sebaiknya jelas, terperinci, dan menggunakan tampilan yang keren atau point setiap bagian."
-                        )
-                    }
-                },
-                {
-                    "author": "user",
-                    "content": {
-                        "image": {
-                            "mimeType": "image/jpeg",
-                            "data": encoded_image
+                    "parts": [
+                        {
+                            "text": prompt_text
                         }
-                    }
+                    ]
                 }
-            ],
-            "temperature": 0.7,
-            "maxOutputTokens": 1000
+            ]
         }
 
         # Kirim request ke Gemini API

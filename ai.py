@@ -5,6 +5,9 @@ import logging
 import os
 import asyncio
 import io # <-- DITAMBAHKAN: Untuk memproses gambar di memori
+import nest_asyncio # <-- TAMBAHKAN BARIS INI
+
+nest_asyncio.apply() # <-- DAN TAMBAHKAN BARIS INI
 
 # --- Konfigurasi (TIDAK DIUBAH) ---
 # Ganti dengan token bot Telegram Anda

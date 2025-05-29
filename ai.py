@@ -29,15 +29,14 @@ ANALYSIS_PROMPT = """Anda adalah seorang analis teknikal pasar forex. Analisis s
 
 async def analyze_image(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
     """
-    Menganalisis gambar yang dikirimkan pengguna menggunakan Gemini AI.
-    Gambar dan prompt dipisahkan secara eksplisit.
-    Error selama pemanggilan Gemini AI akan dicatat dalam log.
+    Menganalisis gambar yang dikirimkan pengguna menggunakan Gemini AI dengan logging detail.
     """
+    logger.info("analyze_image dipanggil")
     user = update.message.from_user
     photo = update.message.photo[-1]
     file = await context.bot.get_file(photo.file_id)
     await file.download_to_drive('user_image.jpg')
-    logger.info("Gambar diterima dari %s", user.first_name)
+    logger.info(f"Gambar diterima dan disimpan dari {user.first_name}")
 
     processing_message = await update.message.reply_text("⏳ Sedang menganalisis gambar Anda... Mohon tunggu sebentar.")
 
@@ -45,13 +44,14 @@ async def analyze_image(update: telegram.Update, context: ContextTypes.DEFAULT_T
         with open('user_image.jpg', 'rb') as image_file:
             image_data = image_file.read()
 
-        # Memisahkan gambar dan prompt secara eksplisit
         contents = [
             {"mime_type": "image/jpeg", "data": image_data},
             {"text": ANALYSIS_PROMPT}
         ]
 
+        logger.info("Memanggil model Gemini AI...")
         response = await model.generate_content(contents)
+        logger.info("Respons dari model Gemini AI diterima.")
         analysis_text = response.text.strip()
         analysis_lines = analysis_text.split('\n')
 
@@ -84,11 +84,13 @@ async def analyze_image(update: telegram.Update, context: ContextTypes.DEFAULT_T
             else:
                 formatted_response += f"{line}\n"
 
+        logger.info(f"Respons yang diformat: {formatted_response}")
         await processing_message.delete()
         await update.message.reply_text(formatted_response, parse_mode=telegram.constants.ParseMode.MARKDOWN)
+        logger.info("Respons berhasil dikirim ke Telegram.")
 
     except Exception as e:
-        logger.error(f"Terjadi kesalahan saat memanggil Gemini AI: {e}") # Log error yang lebih spesifik
+        logger.error(f"Terjadi kesalahan dalam analyze_image: {e}", exc_info=True) # Log error dengan traceback lengkap
         await processing_message.delete() # Pastikan pesan dihapus bahkan saat error
         await update.message.reply_text("⚠️ Maaf, terjadi kesalahan saat menganalisis gambar Anda. Silakan coba lagi nanti.")
     finally:
@@ -100,4 +102,10 @@ async def main():
     application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
     photo_handler = MessageHandler(filters.PHOTO, analyze_image)
-    application.add_handler
+    application.add_handler(photo_handler)
+
+    logger.info("Bot Telegram sudah berjalan...")
+    await application.run_polling()
+
+if __name__ == '__main__':
+    asyncio.run(main())

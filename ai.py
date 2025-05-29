@@ -5,7 +5,7 @@ import google.generativeai as genai
 import logging
 import os
 import asyncio
-import nest_asyncio # Mengimpor nest_asyncio sesuai permintaan Anda
+import nest_asyncio # Mengimpor nest_asyncio
 
 nest_asyncio.apply() # Menerapkan patch nest_asyncio untuk mengatasi masalah event loop
 
@@ -21,10 +21,9 @@ logger = logging.getLogger(__name__)
 
 # Inisialisasi Gemini AI
 genai.configure(api_key=GEMINI_API_KEY)
-# PENTING: Mengganti model dari 'gemini-pro-vision' menjadi 'gemini-1.5-flash'
-# 'gemini-pro-vision' telah didepresiasi. 'gemini-1.5-flash' adalah model terbaru
-# yang direkomendasikan untuk kemampuan pemahaman gambar.
-model = genai.GenerativeModel('gemini-1.5-flash')
+# PENTING: Mengganti model ke 'gemini-1.0-pro-vision-latest'
+# Ini adalah model vision yang tersedia di lokasi Anda berdasarkan pesan error.
+model = genai.GenerativeModel('gemini-1.0-pro-vision-latest')
 
 # Prompt analisis yang akan dikirimkan ke Gemini AI bersama dengan gambar
 ANALYSIS_PROMPT = """Anda adalah seorang analis teknikal pasar forex. Analisis ini bersifat Profesional dan Tingkat kecerdasan Program.\n\nAnalisis screenshot chart trading berikut ini secara detail. Fokus pada elemen-elemen candle terakhir berikut jika terlihat dengan jelas di gambar:\n1. Perkiraan Harga Saat Ini: (jika ada skala harga yang jelas dan mudah dibaca).\n2. Tren Utama: (Contoh: Naik, Turun, Sideways/Konsolidasi).\n3. Pola Candlestick/Chart Signifikan: (Contoh: Doji di Puncak/Lembah, Engulfing, Hammer, Shooting Star, Head and Shoulders, Double Top/Bottom, Triangle, Flag, Wedge, Channel).\n4. Kondisi Indikator Teknikal Utama (jika terlihat jelas): (Contoh: RSI (Oversold <30, Overbought >70, Divergence), MACD (Golden/Death Cross, Divergence, Posisi Histogram), Moving Averages (Posisi harga terhadap MA, Golden/Death Cross MA), Bollinger Bands (Harga menyentuh upper/lower band, Squeeze)).\n5. Level Support dan Resistance Kunci: (Identifikasi beberapa level S&R penting yang terlihat).\n\n6. Gunakan strategi Pola 7 Candle & Teknik 7 Naga.\nBerdasarkan semua observasi di atas, berikan:\n🔹 **Saran Trading Keseluruhan:** (BUY, SELL, atau NETRAL/WAIT)\n🔹 **Alasan Utama (poin-poin):** (Berikan minimal 2-3 alasan utama untuk saran trading Anda, merujuk pada observasi dari poin 1-6 di atas).\n🔹 **Potensi Level Penting (jika teridentifikasi dari chart):**\n  - 🟢 Open Posisi potensial: [jika ada]\n  - 🎯 Target Profit (TP) potensial: [jika ada]\n  - 🛑 Stop Loss (SL) potensial: [jika ada]\n\nStruktur jawaban Anda sebaiknya jelas, terperinci, dan menggunakan tampilan yang keren atau point setiap bagian."""
@@ -67,7 +66,7 @@ async def analyze_image(update: telegram.Update, context: ContextTypes.DEFAULT_T
             elif line.startswith("4. Kondisi Indikator Teknikal Utama"):
                 formatted_response += f"⚙️ {line}\n"
             elif line.startswith("5. Level Support dan Resistance Kunci:"):
-                formatted_response += f"🧱 {line}\n" # Menggunakan emotikon yang konsisten
+                formatted_response += f"🧱 {line}\n"
             elif line.startswith("6. Gunakan strategi"):
                 formatted_response += f"🐉 {line}\n"
             elif line.startswith("🔹 **Saran Trading Keseluruhan:**"):
@@ -110,4 +109,3 @@ if __name__ == '__main__':
     # Dengan nest_asyncio.apply() di awal skrip, asyncio.run() seharusnya bisa dipanggil
     # tanpa masalah "event loop already running".
     asyncio.run(main())
-

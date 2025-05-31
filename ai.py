@@ -32,7 +32,7 @@ except Exception as e:
     exit()
 
 # Prompt analisa
-ANALYSIS_PROMPT = """Anda adalah analis teknikal trading forex profesional . Tolong analisis chart trading dari gambar berikut,Dan mohon berikan arahan mau kemana arah candle berikutnya,Saya ingin strategi  forex Dengan presentase 90% yang mampu memberikan keuntungan konsisten dalam waktu singkat. Tolong jelaskan metode yang paling efektif dengan kombinasi AI, Sertakan juga contoh setup trading berdasarkan arah candle terakhir yanag ada di screnshoot. Saya ingin strategi yang cocok untuk kondisi pasar, serta cara menghindari sinyal palsu agar trading saya lebih akurat dan disiplin.:
+ANALYSIS_PROMPT = """Anda adalah analis teknikal trading forex profesional . Tolong analisis chart trading dari gambar berikut,Dan mohon berikan arahan mau kemana arah candle berikutnya,Saya ingin strategi yang mampu memberikan keuntungan. Tolong jelaskan metode yang paling efektif dengan kombinasi AI, Sertakan juga setup trading berdasarkan arah candle terakhir yanag ada di screnshoot. Saya ingin strategi yang cocok untuk kondisi Market yang ada di screnshoot, serta menghindari sinyal palsu agar trading saya lebih akurat.:
 1. Harga saat ini (jika terlihat)
 2. Arah tren Market
 3. Pola candlestick/chart penting 

@@ -5,7 +5,7 @@ import logging
 import os
 import asyncio
 import io
-import nest_asyncio # OPSIONAL: Aktifkan jika Anda menjalankan di Jupyter/lingkungan interaktif
+import nest_asyncio  # OPSIONAL: Aktifkan jika Anda menjalankan di Jupyter/lingkungan interaktif
 
 # OPSIONAL: Hilangkan tanda pagar di baris bawah jika Anda mendapat error "event loop is already running"
 nest_asyncio.apply()
@@ -15,23 +15,18 @@ TELEGRAM_BOT_TOKEN = '7899180208:AAH4hSC12ByLARkIhB4MXghv5vSYfPjj6EA'
 GEMINI_API_KEY = 'AIzaSyAgBNsxwQzFSVWQuEUKe7PkKykcX42BAx8'
 
 # --- Setup Logging ---
-# Konfigurasi logging dasar untuk skrip kita
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
-# DITAMBAHKAN: Membuat log dari library telegram dan httpx lebih "tenang"
-# Ini akan menyembunyikan log INFO yang berisik, tetapi tetap menampilkan error (WARNING, ERROR)
 logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("telegram.ext").setLevel(logging.WARNING)
 
-# Inisialisasi logger untuk skrip kita sendiri
 logger = logging.getLogger(__name__)
 
 # --- Inisialisasi Gemini AI ---
 try:
     genai.configure(api_key=GEMINI_API_KEY)
-    # DIUBAH: Model diubah ke gemini-1.5-flash-latest sesuai permintaan
     model = genai.GenerativeModel('gemini-1.5-flash-latest')
     logger.info("Berhasil terhubung ke model Gemini: gemini-1.5-flash-latest")
 except Exception as e:
@@ -51,25 +46,24 @@ async def analyze_image(update: telegram.Update, context: ContextTypes.DEFAULT_T
         photo = update.message.photo[-1]
         photo_file = await context.bot.get_file(photo.file_id)
 
-        image_buffer = io.BytesIO()
-        await photo_file.download_to_memory(image_buffer)
-        image_buffer.seek(0)
-        logger.info("Gambar berhasil diunduh ke memori.")
+        # Gunakan buffer dan auto-hapus setelah keluar blok
+        with io.BytesIO() as image_buffer:
+            await photo_file.download_to_memory(image_buffer)
+            image_buffer.seek(0)
 
-        # Siapkan konten untuk dikirim ke Gemini
-        contents = {
-            'parts': [
-                {'mime_type': 'image/jpeg', 'data': image_buffer.getvalue()},
-                {'text': ANALYSIS_PROMPT}
-            ]
-        }
+            contents = {
+                'parts': [
+                    {'mime_type': 'image/jpeg', 'data': image_buffer.getvalue()},
+                    {'text': ANALYSIS_PROMPT}
+                ]
+            }
 
-        logger.info("Memanggil model Gemini AI...")
-        response = await model.generate_content_async(contents)
-        logger.info("Respons dari Gemini AI berhasil diterima.")
-        
+            logger.info("Memanggil model Gemini AI...")
+            response = await model.generate_content_async(contents)
+            logger.info("Respons dari Gemini AI berhasil diterima.")
+
         await processing_message.delete()
-        
+
         await update.message.reply_text(
             response.text,
             parse_mode=telegram.constants.ParseMode.MARKDOWN

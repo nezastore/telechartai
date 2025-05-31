@@ -6,106 +6,104 @@ import os
 import asyncio
 import io
 import nest_asyncio
-from telegram.helpers import escape_markdown
+import re
 
-# Aktifkan jika error "event loop is already running" di Jupyter/VPS
+# Aktifkan jika error "event loop is already running"
 nest_asyncio.apply()
 
 # --- Konfigurasi ---
 TELEGRAM_BOT_TOKEN = '7899180208:AAH4hSC12ByLARkIhB4MXghv5vSYfPjj6EA'
 GEMINI_API_KEY = 'AIzaSyAgBNsxwQzFSVWQuEUKe7PkKykcX42BAx8'
 
-# --- Setup Logging ---
+# --- Logging ---
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
-logging.getLogger("httpx").setLevel(logging.WARNING)
-logging.getLogger("telegram.ext").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
-# --- Inisialisasi Gemini AI ---
+# --- Inisialisasi Gemini ---
 try:
     genai.configure(api_key=GEMINI_API_KEY)
     model = genai.GenerativeModel('gemini-1.5-flash-latest')
-    logger.info("Berhasil terhubung ke model Gemini.")
+    logger.info("Berhasil terhubung ke Gemini AI.")
 except Exception as e:
-    logger.critical(f"Gagal mengkonfigurasi Gemini AI: {e}")
+    logger.critical(f"Gagal koneksi ke Gemini: {e}")
     exit()
 
-# --- Prompt untuk analisis teknikal ---
-ANALYSIS_PROMPT = """Anda adalah seorang analis teknikal pasar forex. Analisis screenshot chart trading berikut ini secara detail. Fokus pada elemen-elemen candle terakhir berikut jika terlihat dengan jelas di gambar:
-1. Perkiraan Harga Saat Ini
-2. Tren Utama
-3. Pola Candlestick/Chart Signifikan
-4. Kondisi Indikator Teknikal
-5. Level Support dan Resistance
-6. Gunakan strategi Fibonaci
+# Prompt analisa
+ANALYSIS_PROMPT = """Anda adalah analis teknikal forex. Tolong analisis chart trading dari gambar berikut,Saya ingin menguasai strategi scalping forex paling mantap yang mampu memberikan keuntungan konsisten dalam waktu singkat. Tolong jelaskan metode scalping yang paling efektif dengan kombinasi indikator terbaik, manajemen risiko yang ketat, dan tips praktis agar saya bisa memaksimalkan profit dengan risiko minimal. Sertakan juga contoh setup trading pada timeframe 1 menit atau 5 menit yang mudah dipahami dan bisa langsung saya praktekkan. Saya ingin strategi yang cocok untuk kondisi pasar trending maupun sideways, serta cara menghindari sinyal palsu agar trading saya lebih akurat dan disiplin. fokus pada:
+1. Harga saat ini (jika terlihat)
+2. Arah tren
+3. Pola candlestick/chart penting
+4. Indikator teknikal (MACD, RSI, MA, Bollinger, dll)
+5. Level support/resistance penting
+6. Gunakan strategi scalping yang efektif
 
-Berdasarkan semua observasi di atas, berikan:
-🔹 **Saran Trading Keseluruhan:** BUY, SELL, atau NETRAL
-🔹 **Alasan Utama:** (minimal 2-3 poin)
-🔹 **Level Penting (jika ada):**
-  - 🟢 Entry point
-  - 🎯 Target Profit
-  - 🛑 Stop Loss
+Berikan saran trading berdasarkan observasi di atas:
+- Saran: Buy / Sell / Netral
+- Alasan utama (minimal 2-3)
+- Level penting: Entry, TP, SL
+- Kesimpulan dan catatan risiko
 
-Gunakan format yang rapi dan jelas."""
+Jawaban harus jelas, singkat, mudah dipahami."""
 
-# --- Fungsi utama analisis gambar ---
+
+# Fungsi untuk menghapus tanda ** dan merapikan
+def clean_text(text):
+    # Hapus semua tanda **
+    text = re.sub(r"\*\*", "", text)
+    # Optional: bisa hapus tanda * tunggal juga jika mau lebih bersih
+    text = re.sub(r"\*", "", text)
+    return text.strip()
+
+
+# Fungsi analisis
 async def analyze_image(update: telegram.Update, context: ContextTypes.DEFAULT_TYPE):
-    logger.info(f"Gambar diterima dari: {update.message.from_user.username}")
-    processing_message = await update.message.reply_text("⏳ Menganalisis gambar dengan AI...")
+    logger.info(f"Gambar dari: {update.message.from_user.username}")
+    loading = await update.message.reply_text("⏳ Gambar diterima, menganalisis dengan AI...")
 
     try:
         photo = update.message.photo[-1]
-        photo_file = await context.bot.get_file(photo.file_id)
+        file = await context.bot.get_file(photo.file_id)
 
-        with io.BytesIO() as image_buffer:
-            await photo_file.download_to_memory(image_buffer)
-            image_buffer.seek(0)
+        with io.BytesIO() as buffer:
+            await file.download_to_memory(buffer)
+            buffer.seek(0)
 
             contents = {
                 'parts': [
-                    {'mime_type': 'image/jpeg', 'data': image_buffer.getvalue()},
+                    {'mime_type': 'image/jpeg', 'data': buffer.getvalue()},
                     {'text': ANALYSIS_PROMPT}
                 ]
             }
 
-            logger.info("Mengirim gambar ke Gemini...")
-            response = await model.generate_content_async(contents)
-            logger.info("Respons diterima.")
+            logger.info("Memproses di Gemini...")
+            result = await model.generate_content_async(contents)
+            logger.info("Jawaban diterima dari Gemini")
 
         try:
-            await processing_message.delete()
-        except Exception as del_err:
-            logger.warning(f"Gagal hapus pesan proses: {del_err}")
-
-        escaped_response = escape_markdown(response.text, version=2)
-
-        await update.message.reply_text(
-            escaped_response,
-            parse_mode=telegram.constants.ParseMode.MARKDOWN_V2
-        )
-        logger.info("Respons dikirim ke user.")
-
-    except Exception as e:
-        logger.error(f"Kesalahan dalam analyze_image: {e}", exc_info=True)
-        try:
-            await processing_message.delete()
+            await loading.delete()
         except:
             pass
-        await update.message.reply_text(
-            "⚠️ Maaf, terjadi kesalahan saat menganalisis gambar. Silakan coba lagi nanti."
-        )
 
-# --- Main function ---
+        clean_response = clean_text(result.text)
+        await update.message.reply_text(clean_response)
+
+    except Exception as e:
+        logger.error(f"Error saat analisis: {e}")
+        try:
+            await loading.delete()
+        except:
+            pass
+        await update.message.reply_text("❗ Terjadi kesalahan saat memproses gambar. Coba lagi nanti.")
+
+# Fungsi utama
 async def main():
-    application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
-    application.add_handler(MessageHandler(filters.PHOTO, analyze_image))
-
-    logger.info("Bot siap! Menunggu gambar untuk dianalisis...")
-    await application.run_polling()
+    app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+    app.add_handler(MessageHandler(filters.PHOTO, analyze_image))
+    logger.info("Bot aktif. Menunggu gambar...")
+    await app.run_polling()
 
 if __name__ == '__main__':
     asyncio.run(main())
